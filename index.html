@@ -1,22 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aim Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aim Testi</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body, html { height: 100%; font-family: sans-serif; }
-    #welcome-screen, #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-    #welcome-screen { background: #111; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; }
-    #name-input { padding: 0.5em; margin: 1em; font-size: 1em; }
-    #start-btn, #no-btn { padding: 1em 2em; margin: 1em; font-size: 1em; cursor: pointer; }
-    #no-btn { opacity: 0.5; pointer-events: none; }
-    #stats { position: absolute; top: 10px; left: 10px; color: white; font-size: 18px; z-index: 3; }
-    #leaderboard { position: absolute; top: 10px; right: 10px; color: white; z-index: 3; width: 200px; }
-    #silhouette { position: absolute; width: 100px; transition: all 0.5s ease; cursor: pointer; }
-    #timer { margin-top: 8px; font-size: 16px; color: #ddd; }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body, html {
+      height: 100%;
+      background: #0f0f1e;
+      color: #fff;
+      overflow: hidden;
+    }
+    #welcome-screen, #game-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      background: #111;
+      z-index: 2;
+      transition: opacity 0.5s ease;
+    }
+    #welcome-screen h1 {
+      font-size: 2.2rem;
+      color: #66ccff;
+      text-shadow: 0 0 8px #66ccff;
+      margin-bottom: 1rem;
+    }
+    #name-input {
+      padding: 0.75em 1em;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      width: 250px;
+      outline: none;
+      box-shadow: 0 0 10px #66ccff;
+      background: #000;
+      color: #66ccff;
+    }
+    #start-btn, #no-btn {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 0.85em 2.5em;
+      margin: 0 0.5em;
+      border: none;
+      border-radius: 30px;
+      color: #0f0f1e;
+      background: #66ccff;
+      box-shadow: 0 0 12px #66ccff;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    #start-btn:hover {
+      background: #4da6ff;
+      box-shadow: 0 0 18px #4da6ff;
+    }
+    #no-btn {
+      pointer-events: none;
+      opacity: 0.4;
+      background: #555;
+      box-shadow: none;
+      color: #aaa;
+      cursor: default;
+    }
+
+    #game-container {
+      background: linear-gradient(135deg, #0f0f1e, #04040a);
+      display: none;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    #stats {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: rgba(0,0,0,0.6);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #66ccffaa;
+      font-size: 18px;
+      line-height: 1.5;
+      color: #66ccff;
+      text-shadow: 0 0 6px #66ccff;
+      min-width: 140px;
+    }
+    #stats span {
+      font-weight: 700;
+    }
+
+    #leaderboard {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      width: 230px;
+      background: rgba(0,0,0,0.6);
+      padding: 15px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #66ccffaa;
+      color: #66ccff;
+      text-shadow: 0 0 6px #66ccff;
+      font-weight: 600;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+    #leaderboard h3 {
+      margin-bottom: 12px;
+      font-size: 1.3rem;
+      border-bottom: 1px solid #66ccffaa;
+      padding-bottom: 6px;
+    }
+    #score-list {
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-left: 5px;
+    }
+    #score-list li {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      transition: color 0.3s ease;
+      cursor: default;
+    }
+
+    #silhouette {
+      position: absolute;
+      width: 100px;
+      cursor: pointer;
+      filter: drop-shadow(0 0 8px #66ccff);
+      transition: left 0.6s ease, top 0.6s ease;
+      user-select: none;
+    }
   </style>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
     const supabaseUrl = 'https://fllflzahixgymrfoaasq.supabase.co';
@@ -25,25 +145,29 @@
   </script>
 </head>
 <body>
+
   <div id="welcome-screen">
     <h1>Aim testini başlatmak ister misin?</h1>
-    <input type="text" id="name-input" placeholder="İsmini gir..." />
+    <input id="name-input" placeholder="İsmini gir..." autocomplete="off" />
     <div>
       <button id="start-btn">Evet</button>
       <button id="no-btn">Hayır</button>
     </div>
   </div>
-  <div id="game-container" style="background: #000; display: none;">
+
+  <div id="game-container">
     <div id="stats">
-      Doğru: <span id="correct">0</span><br>
-      Yanlış: <span id="wrong">0</span>
-      <div id="timer">Kalan Süre: 60</div>
+      Doğru: <span id="correct">0</span><br/>
+      Yanlış: <span id="wrong">-1</span><br/>
+      Süre: <span id="time-left">60</span>s
     </div>
+
     <div id="leaderboard">
       <h3>Lider Tablosu</h3>
-      <ul id="score-list"></ul>
+      <ul id="score-list"><li>Yükleniyor...</li></ul>
     </div>
-    <img id="silhouette" src="https://static.vecteezy.com/system/resources/thumbnails/018/887/506/small_2x/shapes-vintage-labels-png.png" />
+
+    <img id="silhouette" src="https://static.vecteezy.com/system/resources/thumbnails/018/887/506/small_2x/shapes-vintage-labels-png.png" alt="Hedef" />
   </div>
 
   <script>
@@ -54,24 +178,22 @@
     const correctSpan = document.getElementById('correct');
     const wrongSpan = document.getElementById('wrong');
     const leaderboardList = document.getElementById('score-list');
-    const timerDiv = document.getElementById('timer');
+    const timeLeftSpan = document.getElementById('time-left');
 
     let playerName = '';
     let correct = 0;
-    let wrong = 0;
+    let wrong = -1;
     let clickCount = 0;
     let moveSpeed = 2000;
     let moveInterval = null;
-
-    let gameDuration = 60 * 1000; // 1 dakika (ms)
-    let gameTimeout = null;
+    let gameDuration = 60;
+    let timeLeft = gameDuration;
+    let timerInterval = null;
     let gameActive = false;
-    let countdownInterval = null;
-    let timeLeft = 60; // saniye
 
     function randomPosition() {
-      const x = Math.random() * (window.innerWidth - 100);
-      const y = Math.random() * (window.innerHeight - 100);
+      const x = Math.random() * (window.innerWidth - silhouette.offsetWidth);
+      const y = Math.random() * (window.innerHeight - silhouette.offsetHeight);
       return { x, y };
     }
 
@@ -115,84 +237,95 @@
       });
     }
 
+    async function saveScore() {
+      const finalScore = correct - wrong;
+      if (!playerName || finalScore < 0) return;
+
+      try {
+        // Aynı isimde kayıt var mı kontrol et
+        const { data: existing, error: selectError } = await supabase
+          .from('scores')
+          .select('id, score')
+          .eq('name', playerName)
+          .limit(1)
+          .single();
+
+        if (selectError && selectError.code !== 'PGRST116') { // PGRST116: no rows found
+          console.error('Skor kontrol hatası:', selectError);
+          return;
+        }
+
+        if (!existing) {
+          // Kayıt yok, yeni ekle
+          const { error: insertError } = await supabase
+            .from('scores')
+            .insert([{ name: playerName, score: finalScore }]);
+          if (insertError) console.error('Skor eklenemedi:', insertError);
+        } else if (finalScore > existing.score) {
+          // Kayıt var ve yeni skor daha yüksek, güncelle
+          const { error: updateError } = await supabase
+            .from('scores')
+            .update({ score: finalScore })
+            .eq('id', existing.id);
+          if (updateError) console.error('Skor güncellenemedi:', updateError);
+        }
+      } catch (e) {
+        console.error('Skor kaydetme hatası:', e);
+      }
+    }
+
     function endGame() {
       gameActive = false;
       clearInterval(moveInterval);
-      clearInterval(countdownInterval);
-      alert(`Oyun bitti! Doğru: ${correct}, Yanlış: ${wrong}, Toplam Skor: ${correct - wrong}`);
-      if (playerName) {
-        const finalScore = correct - wrong;
-        supabase.from('scores').insert([{ name: playerName, score: finalScore }])
-          .then(({ error }) => {
-            if (error) console.error('Skor gönderilirken hata:', error.message);
-            else updateLeaderboard();
-          });
-      }
-      gameContainer.style.display = 'none';
-      welcomeScreen.style.display = 'flex';
+      clearInterval(timerInterval);
+
+      saveScore().then(updateLeaderboard);
+
+      alert(`Oyun bitti! Skorun: ${correct - wrong}`);
+
       correct = 0;
-      wrong = 0;
+      wrong = -1;
       clickCount = 0;
       moveSpeed = 2000;
-      correctSpan.textContent = correct;
-      wrongSpan.textContent = wrong;
-      timerDiv.textContent = 'Kalan Süre: 60';
-      timeLeft = 60;
+      correctSpan.textContent = '0';
+      wrongSpan.textContent = '-1';
+      timeLeftSpan.textContent = gameDuration;
+
+      gameContainer.style.display = 'none';
+      welcomeScreen.style.display = 'flex';
     }
 
-    function startCountdown() {
-      timeLeft = 60;
-      timerDiv.textContent = `Kalan Süre: ${timeLeft}`;
-      if (countdownInterval) clearInterval(countdownInterval);
-      countdownInterval = setInterval(() => {
+    function startTimer() {
+      timeLeft = gameDuration;
+      timeLeftSpan.textContent = timeLeft;
+      timerInterval = setInterval(() => {
         timeLeft--;
-        timerDiv.textContent = `Kalan Süre: ${timeLeft}`;
+        timeLeftSpan.textContent = timeLeft;
         if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          if (gameActive) endGame();
+          endGame();
         }
       }, 1000);
     }
 
-    startBtn.addEventListener('click', () => {
-      const nameInput = document.getElementById('name-input');
-      const name = nameInput.value.trim();
-      if (!name) return alert('Lütfen ismini gir.');
-      playerName = name;
-      welcomeScreen.style.display = 'none';
-      gameContainer.style.display = 'block';
-      correct = 0;
-      wrong = 0;
-      clickCount = 0;
-      moveSpeed = 2000;
-      correctSpan.textContent = correct;
-      wrongSpan.textContent = wrong;
-      moveSilhouette();
-      updateLeaderboard();
-
-      gameActive = true;
-      startCountdown();
-
-      if (gameTimeout) clearTimeout(gameTimeout);
-      gameTimeout = setTimeout(() => {
-        if (gameActive) endGame();
-      }, gameDuration);
-    });
-
-    silhouette.addEventListener('click', () => {
+    silhouette.addEventListener('click', (e) => {
       if (!gameActive) return;
+
       correct++;
       clickCount++;
       correctSpan.textContent = correct;
-      moveSilhouette();
+      wrongSpan.textContent = wrong;
 
-      if (clickCount === 10) startMoving();
-      else if (clickCount > 10 && clickCount % 10 === 0 && moveSpeed > 200) {
-        moveSpeed -= 200;
+      if (clickCount >= 4 && moveSpeed > 500) {
+        moveSpeed -= 300;
+        clearInterval(moveInterval);
         startMoving();
+        clickCount = 0;
       }
+      moveSilhouette();
+      e.stopPropagation();
     });
 
+    // Yanlış yere tıklama
     gameContainer.addEventListener('click', (e) => {
       if (!gameActive) return;
       if (e.target !== silhouette) {
@@ -200,6 +333,31 @@
         wrongSpan.textContent = wrong;
       }
     });
+
+    startBtn.addEventListener('click', () => {
+      const nameInput = document.getElementById('name-input');
+      if (nameInput.value.trim().length < 3) {
+        alert('Lütfen en az 3 karakterli bir isim giriniz.');
+        return;
+      }
+      playerName = nameInput.value.trim();
+      welcomeScreen.style.display = 'none';
+      gameContainer.style.display = 'block';
+      correct = 0;
+      wrong = -1;
+      clickCount = 0;
+      moveSpeed = 2000;
+      correctSpan.textContent = '0';
+      wrongSpan.textContent = '-1';
+      gameActive = true;
+      moveSilhouette();
+      startMoving();
+      startTimer();
+      updateLeaderboard();
+    });
+
+    // Başlangıçta lider tablosunu yükle
+    updateLeaderboard();
   </script>
 </body>
 </html>
