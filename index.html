@@ -1,196 +1,205 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Aim Testi</title>
-<style>
-  body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    overflow: hidden;
-    background: #222;
-    font-family: Arial, sans-serif;
-    color: white;
-  }
-
-  #counter {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 20px;
-    z-index: 5;
-    background: rgba(0,0,0,0.6);
-    padding: 10px 20px;
-    border-radius: 10px;
-    display: flex;
-    gap: 30px;
-  }
-
-  #welcome-screen {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.9);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-  }
-
-  #welcome-screen h1 {
-    margin-bottom: 20px;
-  }
-
-  button {
-    font-size: 18px;
-    padding: 10px 25px;
-    margin: 0 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  #yes-btn {
-    background-color: #28a745;
-    color: white;
-    transition: background-color 0.3s ease;
-  }
-
-  #yes-btn:hover {
-    background-color: #218838;
-  }
-
-  #no-btn {
-    background-color: #6c757d;
-    color: white;
-    cursor: not-allowed;
-  }
-
-  #silhouette {
-    position: absolute;
-    width: 80px;
-    height: 80px;
-    background: url('https://static.vecteezy.com/system/resources/thumbnails/018/887/506/small_2x/shapes-vintage-labels-png.png') no-repeat center center / contain;
-    pointer-events: auto;
-    cursor: pointer;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aim Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { height: 100%; font-family: sans-serif; }
+    #welcome-screen, #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #welcome-screen { background: #111; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2; }
+    #name-input { padding: 0.5em; margin: 1em; font-size: 1em; }
+    #start-btn, #no-btn { padding: 1em 2em; margin: 1em; font-size: 1em; cursor: pointer; }
+    #no-btn { opacity: 0.5; pointer-events: none; }
+    #stats { position: absolute; top: 10px; left: 10px; color: white; font-size: 18px; z-index: 3; }
+    #leaderboard { position: absolute; top: 10px; right: 10px; color: white; z-index: 3; width: 200px; }
+    #silhouette { position: absolute; width: 100px; transition: all 0.5s ease; cursor: pointer; }
+    #timer { margin-top: 8px; font-size: 16px; color: #ddd; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const supabaseUrl = 'https://fllflzahixgymrfoaasq.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsbGZsemFoaXhneW1yZm9hYXNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk2NzY4MjAsImV4cCI6MjA2NTI1MjgyMH0.mEFkHUI8Aabxs7SxHHcDxHT9CCP3H_I2RyxBERm0MSs';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  </script>
 </head>
 <body>
-
-<div id="welcome-screen">
-  <h1>Aim testini başlatmak ister misin?</h1>
-  <div>
-    <button id="yes-btn">Evet</button>
-    <button id="no-btn" disabled>Hayır</button>
+  <div id="welcome-screen">
+    <h1>Aim testini başlatmak ister misin?</h1>
+    <input type="text" id="name-input" placeholder="İsmini gir..." />
+    <div>
+      <button id="start-btn">Evet</button>
+      <button id="no-btn">Hayır</button>
+    </div>
   </div>
-</div>
+  <div id="game-container" style="background: #000; display: none;">
+    <div id="stats">
+      Doğru: <span id="correct">0</span><br>
+      Yanlış: <span id="wrong">0</span>
+      <div id="timer">Kalan Süre: 60</div>
+    </div>
+    <div id="leaderboard">
+      <h3>Lider Tablosu</h3>
+      <ul id="score-list"></ul>
+    </div>
+    <img id="silhouette" src="https://static.vecteezy.com/system/resources/thumbnails/018/887/506/small_2x/shapes-vintage-labels-png.png" />
+  </div>
 
-<div id="counter">
-  <div>✅ Doğru: <span id="correct">0</span></div>
-  <div>❌ Yanlış: <span id="wrong">0</span></div>
-</div>
+  <script>
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const startBtn = document.getElementById('start-btn');
+    const gameContainer = document.getElementById('game-container');
+    const silhouette = document.getElementById('silhouette');
+    const correctSpan = document.getElementById('correct');
+    const wrongSpan = document.getElementById('wrong');
+    const leaderboardList = document.getElementById('score-list');
+    const timerDiv = document.getElementById('timer');
 
-<div id="silhouette" style="display:none;"></div>
+    let playerName = '';
+    let correct = 0;
+    let wrong = 0;
+    let clickCount = 0;
+    let moveSpeed = 2000;
+    let moveInterval = null;
 
-<script>
-  const welcomeScreen = document.getElementById('welcome-screen');
-  const yesBtn = document.getElementById('yes-btn');
-  const silhouette = document.getElementById('silhouette');
+    let gameDuration = 60 * 1000; // 1 dakika (ms)
+    let gameTimeout = null;
+    let gameActive = false;
+    let countdownInterval = null;
+    let timeLeft = 60; // saniye
 
-  const correctSpan = document.getElementById('correct');
-  const wrongSpan = document.getElementById('wrong');
-  let correctCount = 0;
-  let wrongCount = -1;
+    function randomPosition() {
+      const x = Math.random() * (window.innerWidth - 100);
+      const y = Math.random() * (window.innerHeight - 100);
+      return { x, y };
+    }
 
-  let posX = Math.random() * (window.innerWidth - 80);
-  let posY = Math.random() * (window.innerHeight - 80);
-  let velX = 0;
-  let velY = 0;
-  let moveStarted = false;
-  let clickCount = 0;
+    function moveSilhouette() {
+      const { x, y } = randomPosition();
+      silhouette.style.left = `${x}px`;
+      silhouette.style.top = `${y}px`;
+    }
 
-  silhouette.style.left = posX + 'px';
-  silhouette.style.top = posY + 'px';
-
-  yesBtn.addEventListener('click', () => {
-    welcomeScreen.style.display = 'none';
-    silhouette.style.display = 'block';
-  });
-
-  function randomVelocity(speed) {
-    const dirX = Math.random() < 0.5 ? -1 : 1;
-    const dirY = Math.random() < 0.5 ? -1 : 1;
-    return {
-      x: speed * dirX,
-      y: speed * dirY
-    };
-  }
-
-  silhouette.addEventListener('click', (e) => {
-    e.stopPropagation(); // Sayfaya tıklama olarak sayma
-    correctCount++;
-    correctSpan.textContent = correctCount;
-
-    clickCount++;
-
-    if (clickCount % 10 === 0) {
-      if (!moveStarted) {
-        moveStarted = true;
-        const velocity = randomVelocity(1);
-        velX = velocity.x;
-        velY = velocity.y;
+    function startMoving() {
+      if (moveInterval) clearInterval(moveInterval);
+      moveInterval = setInterval(() => {
         moveSilhouette();
-      } else {
-        velX *= 1.2;
-        velY *= 1.2;
+      }, moveSpeed);
+    }
+
+    async function updateLeaderboard() {
+      const { data, error } = await supabase
+        .from('scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .limit(10);
+
+      leaderboardList.innerHTML = '';
+
+      if (error) {
+        console.error('Lider tablosu alınırken hata oluştu:', error.message);
+        leaderboardList.innerHTML = '<li>Tablo yüklenemedi</li>';
+        return;
       }
+
+      if (!data || data.length === 0) {
+        leaderboardList.innerHTML = '<li>Henüz skor yok</li>';
+        return;
+      }
+
+      data.forEach(entry => {
+        const li = document.createElement('li');
+        li.textContent = `${entry.name}: ${entry.score}`;
+        leaderboardList.appendChild(li);
+      });
     }
 
-    posX = Math.random() * (window.innerWidth - 80);
-    posY = Math.random() * (window.innerHeight - 80);
-    silhouette.style.left = posX + 'px';
-    silhouette.style.top = posY + 'px';
-  });
-
-  function moveSilhouette() {
-    function move() {
-      if (!moveStarted) return;
-
-      posX += velX;
-      posY += velY;
-
-      if (posX <= 0 || posX >= window.innerWidth - 80) velX = -velX;
-      if (posY <= 0 || posY >= window.innerHeight - 80) velY = -velY;
-
-      silhouette.style.left = posX + 'px';
-      silhouette.style.top = posY + 'px';
-
-      requestAnimationFrame(move);
+    function endGame() {
+      gameActive = false;
+      clearInterval(moveInterval);
+      clearInterval(countdownInterval);
+      alert(`Oyun bitti! Doğru: ${correct}, Yanlış: ${wrong}, Toplam Skor: ${correct - wrong}`);
+      if (playerName) {
+        const finalScore = correct - wrong;
+        supabase.from('scores').insert([{ name: playerName, score: finalScore }])
+          .then(({ error }) => {
+            if (error) console.error('Skor gönderilirken hata:', error.message);
+            else updateLeaderboard();
+          });
+      }
+      gameContainer.style.display = 'none';
+      welcomeScreen.style.display = 'flex';
+      correct = 0;
+      wrong = 0;
+      clickCount = 0;
+      moveSpeed = 2000;
+      correctSpan.textContent = correct;
+      wrongSpan.textContent = wrong;
+      timerDiv.textContent = 'Kalan Süre: 60';
+      timeLeft = 60;
     }
-    move();
-  }
 
-  // Yanlış tıklamaları say
-  document.body.addEventListener('click', () => {
-    if (welcomeScreen.style.display === 'none') {
-      wrongCount++;
-      wrongSpan.textContent = wrongCount;
+    function startCountdown() {
+      timeLeft = 60;
+      timerDiv.textContent = `Kalan Süre: ${timeLeft}`;
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        timerDiv.textContent = `Kalan Süre: ${timeLeft}`;
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          if (gameActive) endGame();
+        }
+      }, 1000);
     }
-  });
 
-  window.addEventListener('resize', () => {
-    if (posX > window.innerWidth - 80) posX = window.innerWidth - 80;
-    if (posY > window.innerHeight - 80) posY = window.innerHeight - 80;
-    silhouette.style.left = posX + 'px';
-    silhouette.style.top = posY + 'px';
-  });
-</script>
+    startBtn.addEventListener('click', () => {
+      const nameInput = document.getElementById('name-input');
+      const name = nameInput.value.trim();
+      if (!name) return alert('Lütfen ismini gir.');
+      playerName = name;
+      welcomeScreen.style.display = 'none';
+      gameContainer.style.display = 'block';
+      correct = 0;
+      wrong = 0;
+      clickCount = 0;
+      moveSpeed = 2000;
+      correctSpan.textContent = correct;
+      wrongSpan.textContent = wrong;
+      moveSilhouette();
+      updateLeaderboard();
 
+      gameActive = true;
+      startCountdown();
+
+      if (gameTimeout) clearTimeout(gameTimeout);
+      gameTimeout = setTimeout(() => {
+        if (gameActive) endGame();
+      }, gameDuration);
+    });
+
+    silhouette.addEventListener('click', () => {
+      if (!gameActive) return;
+      correct++;
+      clickCount++;
+      correctSpan.textContent = correct;
+      moveSilhouette();
+
+      if (clickCount === 10) startMoving();
+      else if (clickCount > 10 && clickCount % 10 === 0 && moveSpeed > 200) {
+        moveSpeed -= 200;
+        startMoving();
+      }
+    });
+
+    gameContainer.addEventListener('click', (e) => {
+      if (!gameActive) return;
+      if (e.target !== silhouette) {
+        wrong++;
+        wrongSpan.textContent = wrong;
+      }
+    });
+  </script>
 </body>
 </html>
