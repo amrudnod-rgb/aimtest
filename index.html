@@ -120,11 +120,11 @@
       position: absolute;
       width: 8vw;
       max-width: 100px;
-      min-width: 40px;
+      min-width: 4px;
       aspect-ratio: 1 / 1;
       cursor: pointer;
       filter: drop-shadow(0 0 8px var(--theme-color));
-      transition: left 0.6s ease, top 0.6s ease;
+      transition: left 0.3s ease, top 0.3s ease;
       user-select: none;
     }
     audio {
@@ -204,7 +204,7 @@
     });
 
     function moveSilhouette() {
-      const padding = 150;
+      const padding = 500;
       let x, y;
 
       if (stepCount % 2 === 0) {
